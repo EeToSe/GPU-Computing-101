@@ -4,5 +4,5 @@ website:
       - index.qmd
       - section: Architecture
         contents:
-          - docs/cpu.qmd
-          - docs/gpu.qmd
+          - src/cpu.qmd
+          - src/gpu.qmd
