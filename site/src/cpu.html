@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>How a GPU works – GPU Computing 101</title>
+<title>How a CPU works – GPU Computing 101</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -30,7 +30,6 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../docs/cpu.html" rel="prev">
 <link href="../favicon.jpg" rel="icon" type="image/jpeg">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -70,38 +69,9 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="../styles.css">
-<meta property="og:title" content="How a GPU works – GPU Computing 101">
+<meta property="og:title" content="How a CPU works – GPU Computing 101">
 <meta property="og:description" content="">
 <meta property="og:site_name" content="GPU Computing 101">
 </head>
@@ -144,7 +114,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/cpu.html">Architecture</a></li><li class="breadcrumb-item"><a href="../docs/gpu.html">How a GPU works</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">How a CPU works</li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -172,17 +142,11 @@ window.Quarto = {
       </div>
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../docs/cpu.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">How a CPU works</span></a>
-  </div>
-</li>
+ <span class="menu-text">docs/cpu.qmd</span>
+  </li>
           <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../docs/gpu.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">How a GPU works</span></a>
-  </div>
-</li>
+ <span class="menu-text">docs/gpu.qmd</span>
+  </li>
       </ul>
   </li>
     </ul>
@@ -195,24 +159,19 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#gpu-vs-cpu" id="toc-gpu-vs-cpu" class="nav-link active" data-scroll-target="#gpu-vs-cpu">GPU vs CPU</a></li>
-  <li><a href="#gpu-hierarchy-nvidia-ga102" id="toc-gpu-hierarchy-nvidia-ga102" class="nav-link" data-scroll-target="#gpu-hierarchy-nvidia-ga102">GPU Hierarchy (NVIDIA GA102)</a></li>
-  <li><a href="#one-chip-multiple-products-binning" id="toc-one-chip-multiple-products-binning" class="nav-link" data-scroll-target="#one-chip-multiple-products-binning">One Chip, Multiple Products (Binning)</a></li>
-  <li><a href="#inside-a-cuda-core-fp32-alu" id="toc-inside-a-cuda-core-fp32-alu" class="nav-link" data-scroll-target="#inside-a-cuda-core-fp32-alu">Inside a CUDA Core (FP32 ALU)</a></li>
-  <li><a href="#graphic-card-components" id="toc-graphic-card-components" class="nav-link" data-scroll-target="#graphic-card-components">Graphic card components</a></li>
-  <li><a href="#graphics-memory-vram" id="toc-graphics-memory-vram" class="nav-link" data-scroll-target="#graphics-memory-vram">Graphics Memory (VRAM)</a></li>
-  <li><a href="#embarrassingly-parallel" id="toc-embarrassingly-parallel" class="nav-link" data-scroll-target="#embarrassingly-parallel">“Embarrassingly Parallel”</a></li>
-  <li><a href="#mapping-computation-to-hardware-simd-simt" id="toc-mapping-computation-to-hardware-simd-simt" class="nav-link" data-scroll-target="#mapping-computation-to-hardware-simd-simt">Mapping Computation to Hardware (SIMD → SIMT)</a></li>
-  <li><a href="#tensor-cores-matrix-engines" id="toc-tensor-cores-matrix-engines" class="nav-link" data-scroll-target="#tensor-cores-matrix-engines">Tensor Cores — Matrix Engines</a></li>
+  <li><a href="#part-1-the-stage-and-the-actors---the-core-hardware" id="toc-part-1-the-stage-and-the-actors---the-core-hardware" class="nav-link active" data-scroll-target="#part-1-the-stage-and-the-actors---the-core-hardware">Part 1: The Stage and the Actors - The Core Hardware</a></li>
+  <li><a href="#part-2-the-script-and-props---what-resides-in-ram" id="toc-part-2-the-script-and-props---what-resides-in-ram" class="nav-link" data-scroll-target="#part-2-the-script-and-props---what-resides-in-ram">Part 2: The Script and Props - What Resides in RAM</a></li>
+  <li><a href="#part-3-the-heartbeat---the-system-clock" id="toc-part-3-the-heartbeat---the-system-clock" class="nav-link" data-scroll-target="#part-3-the-heartbeat---the-system-clock">Part 3: The Heartbeat - The System Clock</a></li>
+  <li><a href="#part-4-the-core-task---the-instruction-cycle" id="toc-part-4-the-core-task---the-instruction-cycle" class="nav-link" data-scroll-target="#part-4-the-core-task---the-instruction-cycle">Part 4: The Core Task - The Instruction Cycle</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/cpu.html">Architecture</a></li><li class="breadcrumb-item"><a href="../docs/gpu.html">How a GPU works</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">How a GPU works</h1>
+<h1 class="title">How a CPU works</h1>
 </div>
 
 
@@ -229,330 +188,84 @@ window.Quarto = {
 </header>
 
 
-<p>How many calculations do graphics cards perform:</p>
+<section id="part-1-the-stage-and-the-actors---the-core-hardware" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-the-stage-and-the-actors---the-core-hardware">Part 1: The Stage and the Actors - The Core Hardware</h2>
+<p>Before any computation can happen, we need a stage and actors. In computing, these are the CPU and RAM.</p>
 <ul>
-<li><strong>Mario 64 (1996):</strong> ~<strong>100 million</strong> calculations/s.</li>
-<li><strong>Minecraft (2011):</strong> ~<strong>100 billion</strong> calculations/s.</li>
-<li><strong>Cyberpunk 2077:</strong> ~<strong>36 trillion</strong> calculations/s.</li>
-</ul>
-<p><strong>Intuition:</strong> To match <strong>36T calc/s</strong>, imagine <strong>~4,400 Earths</strong> where every person completes <strong>1 calculation each second</strong>.</p>
-<section id="gpu-vs-cpu" class="level2">
-<h2 class="anchored" data-anchor-id="gpu-vs-cpu">GPU vs CPU</h2>
+<li><p><strong>The Central Processing Unit (CPU):</strong> This is the “brain” of the computer. It’s where all the thinking and calculation happens. It contains several key sub-components:</p>
 <ul>
-<li><strong>GPU:</strong> “<strong>&gt;10,000 cores</strong>,” optimized for <strong>massively parallel</strong>, <strong>simple</strong> arithmetic; <strong>cannot</strong> run OS or directly interface with input devices or networks.</li>
-<li><strong>CPU:</strong> “<strong>~24 cores</strong>,” higher per-core speed; <strong>flexible</strong> instruction support; runs OS and diverse I/O.</li>
-<li><strong>Analogy:</strong> GPU = <strong>cargo ship</strong> (huge throughput, slower per unit). CPU = <strong>jumbo jet</strong> (lower throughput, faster per unit, flexible).</li>
-</ul>
-</section>
-<section id="gpu-hierarchy-nvidia-ga102" class="level2">
-<h2 class="anchored" data-anchor-id="gpu-hierarchy-nvidia-ga102">GPU Hierarchy (NVIDIA GA102)</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Level</th>
-<th style="text-align: left;">Component</th>
-<th style="text-align: left;">Count per Parent Component</th>
-<th style="text-align: left;">Total Count (on GPU)</th>
-<th style="text-align: left;">Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;"><strong>1. Chip</strong></td>
-<td style="text-align: left;"><strong>Full GA102 GPU</strong></td>
-<td style="text-align: left;">N/A</td>
-<td style="text-align: left;"><strong>1</strong></td>
-<td style="text-align: left;">Contains 28.3 billion transistors.</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>2. Cluster</strong></td>
-<td style="text-align: left;"><strong>Graphics Processing Cluster (GPC)</strong></td>
-<td style="text-align: left;"><strong>7</strong> GPCs per GPU</td>
-<td style="text-align: left;"><strong>7</strong></td>
-<td style="text-align: left;">The highest-level logical block.</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>3. Processor</strong></td>
-<td style="text-align: left;"><strong>Streaming Multiprocessor (SM)</strong></td>
-<td style="text-align: left;"><strong>12</strong> SMs per GPC</td>
-<td style="text-align: left;"><strong>84</strong></td>
-<td style="text-align: left;">The main processing engine of the GPU.</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>4. Scheduler</strong></td>
-<td style="text-align: left;"><strong>Warp Scheduler / Processing Block</strong></td>
-<td style="text-align: left;"><strong>4</strong> Schedulers per SM</td>
-<td style="text-align: left;"><strong>336</strong></td>
-<td style="text-align: left;">Manages and dispatches warps (groups of 32 threads).</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>5. Core</strong></td>
-<td style="text-align: left;"><strong>CUDA Core</strong></td>
-<td style="text-align: left;"><strong>32</strong> CUDA Cores per Scheduler</td>
-<td style="text-align: left;"><strong>10,752</strong></td>
-<td style="text-align: left;">Executes floating-point and integer math.</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"></td>
-<td style="text-align: left;"><strong>Tensor Core</strong></td>
-<td style="text-align: left;"><strong>1</strong> Tensor Core per Scheduler</td>
-<td style="text-align: left;"><strong>336</strong></td>
-<td style="text-align: left;">Accelerates AI matrix calculations.</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"></td>
-<td style="text-align: left;"><strong>Ray Tracing (RT) Core</strong></td>
-<td style="text-align: left;"><strong>1</strong> RT Core per <strong>SM</strong></td>
-<td style="text-align: left;"><strong>84</strong></td>
-<td style="text-align: left;">Accelerates ray-triangle intersection tests.</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="one-chip-multiple-products-binning" class="level2">
-<h2 class="anchored" data-anchor-id="one-chip-multiple-products-binning">One Chip, Multiple Products (Binning)</h2>
-<p>During the manufacturing process, sometimes patterning errors, dust particles, or other manufacturing issues cause damage and create defective areas of the circuit. Instead of throwing out the entire chip because of a small defect, engineers find the defective region and permanently isolate and deactivate the nearby circuitry. By having a GPU with a highly repetitive design, a small defect in one core only damages that particular streaming multiprocessor circuit and doesn’t affect the other areas of the chip. As a result, these chips are tested and categorized, or binned, according to the number of defects.</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 14%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Model</th>
-<th style="text-align: left;">CUDA Cores</th>
-<th style="text-align: left;">Active SMs</th>
-<th style="text-align: left;">SMs Disabled</th>
-<th style="text-align: left;">Boost Clock (MHz)</th>
-<th style="text-align: left;">Memory</th>
-<th style="text-align: left;">Release Date</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;"><strong>RTX 3080</strong></td>
-<td style="text-align: left;">8,704</td>
-<td style="text-align: left;">68</td>
-<td style="text-align: left;">16</td>
-<td style="text-align: left;">1710</td>
-<td style="text-align: left;">10 GB</td>
-<td style="text-align: left;">September 17, 2020</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>RTX 3080 Ti</strong></td>
-<td style="text-align: left;">10,240</td>
-<td style="text-align: left;">80</td>
-<td style="text-align: left;">4</td>
-<td style="text-align: left;">1665</td>
-<td style="text-align: left;">12 GB</td>
-<td style="text-align: left;">June 3, 2021</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>RTX 3090</strong></td>
-<td style="text-align: left;">10,496</td>
-<td style="text-align: left;">82</td>
-<td style="text-align: left;">2</td>
-<td style="text-align: left;">1695</td>
-<td style="text-align: left;">24 GB</td>
-<td style="text-align: left;">September 24, 2020</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>RTX 3090 Ti</strong></td>
-<td style="text-align: left;">10,752</td>
-<td style="text-align: left;">84</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1860</td>
-<td style="text-align: left;">24 GB</td>
-<td style="text-align: left;">March 29, 2022</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li><strong>Same GA102</strong> used across <strong>RTX 3080, 3080 Ti, 3090, 3090 Ti</strong>.</li>
-<li><strong>Yield/defect handling:</strong> isolate defective regions; disable affected SMs; <strong>bin</strong> by working units.</li>
-<li><strong>Also differ by:</strong> <strong>max clock</strong>, <strong>VRAM quantity/generation</strong>.</li>
-</ul>
-</section>
-<section id="inside-a-cuda-core-fp32-alu" class="level2">
-<h2 class="anchored" data-anchor-id="inside-a-cuda-core-fp32-alu">Inside a CUDA Core (FP32 ALU)</h2>
-<ul>
-<li><p>A <strong>CUDA core</strong> = 1 FP32 ALU capable of one <strong>FMA (A×B + C)</strong> per clock (2 FLOPs).</p></li>
-<li><p>Each <strong>SM</strong> in GA102 (Ampere) has</p>
-<ul>
-<li><strong>128 FP32 cores</strong>.</li>
-<li><strong>2 FP64 ALUs</strong> (double-precision), far fewer than FP32 — ~1/64 FP32 throughput.</li>
-<li><strong>INT32 ALUs</strong> — in Ampere, half of FP32 cores are <em>hybrid FP32/INT32</em> units, which can execute either FP32 or INT32 per cycle.</li>
-<li><strong>4 Tensor Cores</strong> (3rd gen) for matrix multiply-accumulate at lower precisions (FP16, BF16, TF32, INT8, INT4).</li>
-<li><strong>1 RT Core</strong> for ray tracing.</li>
-<li>Special Function Units (SFUs), Load/Store units, warp schedulers.</li>
+<li><strong>Control Unit (CU):</strong> The “brain” or “foreman” of the operation. It fetches and decodes instructions and sends out command signals to the other components.</li>
+<li><strong>Arithmetic Logic Unit (ALU):</strong> The dedicated calculator for all math and logic.</li>
+<li><strong>Registers:</strong> A small number of extremely fast memory locations on the CPU chip itself, acting as an immediate workbench.</li>
 </ul></li>
-<li><p><strong>Most common method for theoretical FP32 peak:</strong></p>
-<p><span class="math display">\[
-\text{Peak FLOPS} = (\text{\#FP32 cores}) \times (\text{clock freq}) \times 2
-\]</span> For RTX 3090: <span class="math inline">\(10{,}496 \times 1.70\,\text{GHz} \times 2 \approx 35.7\)</span> TFLOPS FP32.</p></li>
-<li><p>Actual achieved FLOPS depend heavily on instruction mix, memory bandwidth, and pipeline utilization — real workloads often achieve a fraction of the peak.</p></li>
+<li><p><strong>Random Access Memory (RAM):</strong> This is the CPU’s primary workspace. It’s a vast grid of temporary storage where all the necessary information for active programs is held. The CPU constantly communicates with RAM to get what it needs.</p></li>
+<li><p><strong>Buses:</strong> The electronic highways that connect all the components, allowing data and instructions to move between them.</p></li>
 </ul>
 </section>
-<section id="graphic-card-components" class="level2">
-<h2 class="anchored" data-anchor-id="graphic-card-components">Graphic card components</h2>
-<p><strong>On-die (GA102)</strong></p>
+<section id="part-2-the-script-and-props---what-resides-in-ram" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-the-script-and-props---what-resides-in-ram">Part 2: The Script and Props - What Resides in RAM</h2>
+<p>Now that we have the workspace (RAM), we must define what’s inside it. RAM holds a mixture of three types of information, all stored as raw binary data (1s and 0s). To the RAM, it’s all the same, but to the CPU, they have very different meanings:</p>
+<ol type="1">
+<li><strong>Instructions:</strong> These are the commands that form a computer program. They are the “script” that tells the CPU what to do.</li>
+</ol>
 <ul>
-<li><strong>Memory controllers:</strong> 12 × 32-bit GDDR6X controllers (384-bit total), positioned around die edges for shortest routing.</li>
-<li><strong>NVLink controllers:</strong> Present only on RTX 3090 and pro SKUs, absent on some consumer GA102 cards.</li>
-<li><strong>PCIe interface:</strong> PCIe 4.0 controller and PHY integrated on die.</li>
-<li><strong>L2 cache:</strong> 6 MB unified SRAM, distributed near memory controllers.</li>
-<li><strong>GigaThread Engine:</strong> Global scheduler managing all GPCs (Graphics Processing Clusters) and SMs.</li>
+<li><strong>Opcode (Operation Code):</strong> The “verb” of the command. It’s a binary pattern that specifies the action to perform (e.g., <code>ADD</code>, <code>LOAD</code>, <code>STORE</code>).</li>
+<li><strong>Operand(s):</strong> The “nouns” of the command. They specify the data or the location of the data to be used, such as a register number or a memory address.</li>
 </ul>
-<p><strong>On the graphics card PCB</strong></p>
-<ul>
-<li><strong>Display outputs:</strong> Typically 3× DisplayPort 1.4a + 1× HDMI 2.1 (FE layout; AIB may vary).</li>
-<li><strong>Power input:</strong> 12-pin NVIDIA connector (FE) or 2–3× 8-pin PCIe connectors; delivers +12 V.</li>
-<li><strong>PCIe edge connector:</strong> ×16, Gen 4.0; provides power (max 75 W) and data lanes.</li>
-<li><strong>Voltage Regulator Module (VRM):</strong> Steps 12 V down to ~0.7–1.1 V for GPU core, ~1.35 V for GDDR6X; capable of supplying hundreds of watts (300–400 A).</li>
-</ul>
+<ol start="2" type="1">
+<li><strong>Data:</strong> This is the raw material the instructions work on—the numbers, text, and values that are processed.</li>
+<li><strong>Addresses:</strong> These are special numbers that act as pointers, indicating the specific location of other instructions or pieces of data within RAM’s grid.</li>
+</ol>
 </section>
-<section id="graphics-memory-vram" class="level2">
-<h2 class="anchored" data-anchor-id="graphics-memory-vram">Graphics Memory (VRAM)</h2>
-<ul>
-<li><p>The graphics card has <strong>24 gigabytes of GDDR6X SDRAM</strong> (graphics memory).</p></li>
-<li><p>The GPU contains a very small <strong>6-megabyte Level 2 cache</strong> for immediate data access.</p></li>
-<li><p>During loading screens, 3D models are moved from the <strong>solid-state drive (SSD)</strong> into the graphics memory.</p></li>
-<li><p>To render a game, data is continuously transferred between the graphics memory and the GPU’s cache.</p></li>
-<li><p>The graphics memory has a <strong>384-bit bus width</strong>, which is the amount of data it can transfer simultaneously.</p></li>
-<li><p>This results in a total bandwidth of approximately <strong>1.15 terabytes per second (TB/s)</strong>.</p></li>
-<li><p>For comparison, the CPU’s standard memory (DRAM) has a much smaller <strong>64-bit bus width</strong> and a bandwidth of only <strong>~64 gigabytes per second (GB/s)</strong>.</p></li>
-</ul>
-<p><strong>Signaling/encoding:</strong></p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 17%">
-<col style="width: 38%">
-<col style="width: 23%">
-<col style="width: 20%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Step</th>
-<th>Calculation</th>
-<th>Result</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>CK (Base)</td>
-<td>Given</td>
-<td>1219 MHz</td>
-<td>Command clock.</td>
-</tr>
-<tr class="even">
-<td>WCK (High-Speed Mode)</td>
-<td>4 × CK</td>
-<td>4876 MHz</td>
-<td>QDR mode ratio for peak performance.</td>
-</tr>
-<tr class="odd">
-<td>Symbol Rate</td>
-<td>2 × WCK (DDR)</td>
-<td>9752 Msymbols/s</td>
-<td>Transfers on both clock edges; equivalent to 8 × CK.</td>
-</tr>
-<tr class="even">
-<td>Effective Data Rate (with PAM-4)</td>
-<td>Symbol Rate × 2</td>
-<td>19.5 Gbps</td>
-<td>GDDR6X-specific; bits per symbol doubles bandwidth.</td>
-</tr>
-<tr class="odd">
-<td>Bus Width</td>
-<td>Given</td>
-<td>384 bits</td>
-<td>Number of data pins in the memory interface.</td>
-</tr>
-<tr class="even">
-<td>Total Throughput</td>
-<td>Effective Data Rate × Bus Width</td>
-<td>7488 Gbits/s</td>
-<td>Aggregate bit rate across all pins (19.5 Gbps/pin × 384 pins).</td>
-</tr>
-<tr class="odd">
-<td>Memory Bandwidth</td>
-<td>Total Throughput / 8</td>
-<td>936 GB/s</td>
-<td>Converted from bits to bytes (divide by 8 bits/byte) for standard bandwidth metric.</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li><p><strong>GDDR6X:</strong> <strong>PAM-4</strong> (2 bits per symbol via 4 voltage levels).</p></li>
-<li><p><strong>GDDR7:</strong> <strong>PAM-3</strong> (ternary digits, voltages <strong>−1/0/+1</strong>).</p>
-<ul>
-<li>Example from talk: <strong>3 binary bits → 2 ternary digits</strong>; combined with an <strong>11-bit → 7 ternary-digit</strong> scheme → <strong>send 276 binary bits using 176 ternary digits</strong>.</li>
-</ul></li>
-<li><p><strong>Motivation for PAM-3:</strong> reduce <strong>encoder complexity</strong>, improve <strong>SNR</strong>, improve <strong>power efficiency</strong>.</p></li>
-</ul>
-<p><strong>High-Bandwidth Memory (HBM) for AI</strong></p>
-<ul>
-<li><strong>Structure:</strong> stacked DRAM with <strong>TSVs</strong> (through-silicon vias) → “memory cube” around AI chips.</li>
-<li><strong>HBM3E capacities:</strong> <strong>24–36 GB per cube</strong>; <strong>up to ~192 GB</strong> around one AI chip.</li>
-<li><strong>Claim:</strong> <strong>~30% less power</strong> than “competitive products”.</li>
-<li><strong>System context:</strong> AI accelerator systems <strong>$25–40k</strong>; often <strong>backordered</strong>.</li>
-</ul>
+<section id="part-3-the-heartbeat---the-system-clock" class="level2">
+<h2 class="anchored" data-anchor-id="part-3-the-heartbeat---the-system-clock">Part 3: The Heartbeat - The System Clock</h2>
+<p>At the absolute core of the CPU is the <strong>Clock</strong>. It’s a crystal oscillator that produces a steady, rhythmic pulse billions of times per second. This pulse, called a <strong>clock cycle</strong>, is the fundamental unit of time for the CPU. Its speed is measured in <strong>Hertz (Hz)</strong>, with modern CPUs operating in the Gigahertz (GHz), or billions of cycles per second. The clock’s purpose is to synchronize all the CPU’s components, ensuring every action happens in a coordinated and orderly fashion.</p>
 </section>
-<section id="embarrassingly-parallel" class="level2">
-<h2 class="anchored" data-anchor-id="embarrassingly-parallel">“Embarrassingly Parallel”</h2>
+<section id="part-4-the-core-task---the-instruction-cycle" class="level2">
+<h2 class="anchored" data-anchor-id="part-4-the-core-task---the-instruction-cycle">Part 4: The Core Task - The Instruction Cycle</h2>
+<p>To understand how a CPU works, we must first look at <strong>what</strong> it can do — not just <strong>how</strong> it does it. That “what” is called the <strong>Instruction Set Architecture (ISA)</strong> — a list of all the basic commands the CPU understands. Think of it as the CPU’s <strong>vocabulary</strong>.</p>
+<ol type="1">
+<li><strong>Data Transfer Instructions</strong>: Moving data around</li>
+</ol>
+<p>These instructions move data between memory, the CPU, and devices.</p>
 <ul>
-<li><strong>Definition:</strong> problems that need <strong>little/no effort</strong> to split into parallel tasks.</li>
-<li><strong>GPU fit:</strong> <strong>SIMD/SIMT</strong> executing the <strong>same instructions</strong> over <strong>many data elements</strong>.</li>
-<li><strong>Examples:</strong> <strong>video game rendering</strong>, <strong>Bitcoin mining</strong>, <strong>neural networks/AI</strong>.</li>
+<li><code>LOAD</code>: Move data <strong>from memory → into CPU register</strong></li>
+<li><code>STORE</code>: Move data <strong>from CPU register → into memory</strong></li>
+<li><code>IN</code> / <code>OUT</code>: Communicate with external devices (e.g., keyboard, screen)</li>
 </ul>
-<p><strong>Vertex Translation (Model → World)</strong></p>
+<p><strong>Analogy</strong>: Like fetching ingredients from the fridge (<code>LOAD</code>) and putting the cooked meal back (<code>STORE</code>).</p>
+<ol start="2" type="1">
+<li><strong>Arithmetic and Logic Instructions</strong>: Doing math and comparisons</li>
+</ol>
+<p>Handled by the CPU’s <strong>ALU (Arithmetic Logic Unit)</strong>.</p>
 <ul>
-<li><strong>Object example:</strong> <strong>cowboy hat</strong> with <strong>~28k triangles</strong>, <strong>~14k vertices (x,y,z)</strong>; origin at <strong>(0,0,0)</strong> in <strong>model space</strong>.</li>
-<li><strong>World assembly:</strong> place <strong>hundreds of objects</strong> into <strong>world space</strong>; translate each vertex by object’s world origin (and similarly handle rotation/scale in additional steps).</li>
-<li><strong>Scene numbers (from talk):</strong> <strong>5,629 objects</strong>, <strong>8.3 million vertices</strong> → <strong>~25 million additions</strong> for translation step.</li>
-<li><strong>Key idea:</strong> each vertex transform is <strong>independent</strong> → perfect for <strong>massive parallelism</strong>.</li>
+<li><code>ADD</code>, <code>SUBTRACT</code>, <code>MULTIPLY</code>: Perform basic math</li>
+<li><code>COMPARE</code>: Compare two values and <strong>set internal flags</strong> (e.g., “are they equal?” → set the Zero flag)</li>
 </ul>
-</section>
-<section id="mapping-computation-to-hardware-simd-simt" class="level2">
-<h2 class="anchored" data-anchor-id="mapping-computation-to-hardware-simd-simt">Mapping Computation to Hardware (SIMD → SIMT)</h2>
+<p><strong>Flags</strong> help the CPU remember the result of comparisons for later use (e.g., in decision-making).</p>
+<ol start="3" type="1">
+<li><strong>Control Flow Instructions</strong>: Making decisions</li>
+</ol>
+<p>These control the <strong>sequence of execution</strong> — whether to continue normally or jump elsewhere.</p>
 <ul>
-<li><p><strong>Thread:</strong> executes one instruction on one data element (conceptually maps to a CUDA core).</p></li>
-<li><p><strong>Warp:</strong> <strong>32 threads</strong> executing the <strong>same instruction sequence</strong>.</p></li>
-<li><p><strong>Thread Block:</strong> a group of warps handled by an <strong>SM</strong>; can use <strong>shared L1 cache (128 KB per SM, as stated)</strong> for data sharing.</p></li>
-<li><p><strong>Grid:</strong> many blocks across the <strong>entire GPU</strong>.</p></li>
-<li><p><strong>Global scheduler:</strong> <strong>Gigathread Engine</strong> maps blocks to SMs.</p></li>
-<li><p><strong>SIMT vs SIMD (evolution):</strong></p>
-<ul>
-<li>Older GPUs: <strong>SIMD lockstep</strong> within warps.</li>
-<li>Newer GPUs: <strong>SIMT</strong> — same instruction stream, but <strong>threads can progress at different rates</strong> (each has its <strong>own program counter</strong>).</li>
-</ul></li>
-<li><p><strong>Warp divergence:</strong> data-dependent branches serialize paths; <strong>reconvergence</strong> at synchronization barriers.</p></li>
+<li><code>JUMP</code>: Go to another instruction (unconditionally)</li>
+<li><code>JUMP IF</code>: Jump only if a condition is true (e.g., Jump if Equal = only if the <code>COMPARE</code> said they were equal)</li>
 </ul>
-</section>
-<section id="tensor-cores-matrix-engines" class="level2">
-<h2 class="anchored" data-anchor-id="tensor-cores-matrix-engines">Tensor Cores — Matrix Engines</h2>
+<p>The CPU executes programs by repeating a fundamental loop called the <strong>Instruction Cycle</strong>, driven by the clock. Here is the correct, logical sequence of events:</p>
+<ol type="1">
+<li><strong>Begin Fetch:</strong> The Control Unit consults a special register called the <strong>Instruction Pointer (IP)</strong> or <strong>Program Counter (PC)</strong>. This pointer’s sole job is to hold the memory address of the next instruction to execute.</li>
+<li><strong>Fetch from RAM:</strong> The CU retrieves the binary instruction from the memory address indicated by the IP.</li>
+<li><strong>Increment the Pointer:</strong> Immediately after the fetch, the IP’s value is increased to point to the next instruction’s address, ensuring the program will proceed sequentially.</li>
+<li><strong>Decode:</strong> The CU decodes the fetched instruction, understanding what action needs to be performed and what data is involved.</li>
+<li><strong>Execute:</strong> The CU sends command signals to the <strong>ALU</strong> and <strong>Registers</strong>. The ALU performs the actual calculation or logical comparison.</li>
+<li><strong>Store:</strong> The result of the execution is saved, typically back into a register for quick reuse.</li>
+</ol>
+<p>A single instruction can take multiple clock cycles to complete. The efficiency of a CPU is therefore not just about clock speed (GHz), but also about how many <strong>Instructions Per Clock (IPC)</strong> it can achieve.</p>
+<p>relevant links:</p>
 <ul>
-<li><strong>Operation form:</strong> <strong>D = A×B + C</strong> (matrix multiply-accumulate) with all three inputs “ready,” executing <strong>concurrently</strong> across tiles.</li>
-<li><strong>Use cases:</strong> <strong>neural networks/AI</strong>, <strong>geometric transformations</strong>.</li>
-<li><strong>Note:</strong> Ray Tracing Cores covered in a separate video.</li>
-</ul>
-<p>links:</p>
-<ul>
-<li><a href="https://www.youtube.com/watch?v=h9Z4oGN89MU">How do Graphics Cards Work? Exploring GPU Architecture</a></li>
-<li><a href="https://www.youtube.com/watch?v=3l10o0DYJXg">How GPU Computing Works | GTC 2021</a></li>
+<li><p><a href="https://www.youtube.com/watch?v=cNN_tTXABUA">How a CPU Works - Youtube</a></p></li>
+<li><p><a href="http://www.visual6502.org/">Visual Transistor-level Simulation of the 6502 CPU</a></p></li>
+<li><p><a href="https://cpu.land/the-basics">Putting the “You” in CPU</a></p></li>
 </ul>
 
 
@@ -958,15 +671,6 @@ window.Quarto = {
     }
   });
   </script>
-<nav class="page-navigation">
-  <div class="nav-page nav-page-previous">
-      <a href="../docs/cpu.html" class="pagination-link" aria-label="How a CPU works">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">How a CPU works</span>
-      </a>          
-  </div>
-  <div class="nav-page nav-page-next">
-  </div>
-</nav>
 </div> <!-- /content -->
 
 
