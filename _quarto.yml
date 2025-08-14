@@ -1,0 +1,37 @@
+project:
+  type: website
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+
+  # gfm:
+  #   # keep the raw markdown
+  #   echo: true
+
+website:
+  title: "GPU Computing 101"
+  favicon: favicon.jpg
+  open-graph: true
+  reader-mode: true
+  page-navigation: true
+  navbar:
+    background: primary
+    search: true
+    right:
+      - icon: github
+        href: https://github.com/EeToSe/GPU-Computing
+
+  sidebar:
+    style: floating
+
+metadata-files:
+  - sidebar.yml
+
+
+
+
+
+

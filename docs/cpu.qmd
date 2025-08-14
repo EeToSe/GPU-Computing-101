@@ -1,0 +1,79 @@
+---
+title: How a CPU works
+---
+
+## Part 1: The Stage and the Actors - The Core Hardware
+
+Before any computation can happen, we need a stage and actors. In computing, these are the CPU and RAM.
+
+* **The Central Processing Unit (CPU):** This is the "brain" of the computer. It's where all the thinking and calculation happens. It contains several key sub-components:
+  * **Control Unit (CU):** The "brain" or "foreman" of the operation. It fetches and decodes instructions and sends out command signals to the other components.
+  * **Arithmetic Logic Unit (ALU):** The dedicated calculator for all math and logic.
+  * **Registers:** A small number of extremely fast memory locations on the CPU chip itself, acting as an immediate workbench.
+
+* **Random Access Memory (RAM):** This is the CPU's primary workspace. It's a vast grid of temporary storage where all the necessary information for active programs is held. The CPU constantly communicates with RAM to get what it needs.
+
+* **Buses:** The electronic highways that connect all the components, allowing data and instructions to move between them.
+
+## Part 2: The Script and Props - What Resides in RAM
+
+Now that we have the workspace (RAM), we must define what's inside it. RAM holds a mixture of three types of information, all stored as raw binary data (1s and 0s). To the RAM, it's all the same, but to the CPU, they have very different meanings:
+
+1.  **Instructions:** These are the commands that form a computer program. They are the "script" that tells the CPU what to do.
+  * **Opcode (Operation Code):** The "verb" of the command. It's a binary pattern that specifies the action to perform (e.g., `ADD`, `LOAD`, `STORE`).
+  * **Operand(s):** The "nouns" of the command. They specify the data or the location of the data to be used, such as a register number or a memory address.
+2.  **Data:** This is the raw material the instructions work on—the numbers, text, and values that are processed.
+3.  **Addresses:** These are special numbers that act as pointers, indicating the specific location of other instructions or pieces of data within RAM's grid.
+
+## Part 3: The Heartbeat - The System Clock
+
+At the absolute core of the CPU is the **Clock**. It's a crystal oscillator that produces a steady, rhythmic pulse billions of times per second. This pulse, called a **clock cycle**, is the fundamental unit of time for the CPU. Its speed is measured in **Hertz (Hz)**, with modern CPUs operating in the Gigahertz (GHz), or billions of cycles per second. The clock's purpose is to synchronize all the CPU's components, ensuring every action happens in a coordinated and orderly fashion.
+
+## Part 4: The Core Task - The Instruction Cycle
+
+To understand how a CPU works, we must first look at **what** it can do — not just **how** it does it. That “what” is called the **Instruction Set Architecture (ISA)** — a list of all the basic commands the CPU understands. Think of it as the CPU's **vocabulary**.
+
+1. **Data Transfer Instructions**: Moving data around
+
+  These instructions move data between memory, the CPU, and devices.
+
+  * `LOAD`: Move data **from memory → into CPU register**
+  * `STORE`: Move data **from CPU register → into memory**
+  * `IN` / `OUT`: Communicate with external devices (e.g., keyboard, screen)
+
+  **Analogy**: Like fetching ingredients from the fridge (`LOAD`) and putting the cooked meal back (`STORE`).
+
+2. **Arithmetic and Logic Instructions**: Doing math and comparisons
+
+  Handled by the CPU’s **ALU (Arithmetic Logic Unit)**.
+
+  * `ADD`, `SUBTRACT`, `MULTIPLY`: Perform basic math
+  * `COMPARE`: Compare two values and **set internal flags** (e.g., "are they equal?" → set the Zero flag)
+
+  **Flags** help the CPU remember the result of comparisons for later use (e.g., in decision-making).
+
+3. **Control Flow Instructions**: Making decisions
+
+  These control the **sequence of execution** — whether to continue normally or jump elsewhere.
+
+  * `JUMP`: Go to another instruction (unconditionally)
+  * `JUMP IF`: Jump only if a condition is true (e.g., Jump if Equal = only if the `COMPARE` said they were equal)
+
+The CPU executes programs by repeating a fundamental loop called the **Instruction Cycle**, driven by the clock. Here is the correct, logical sequence of events:
+
+1.  **Begin Fetch:** The Control Unit consults a special register called the **Instruction Pointer (IP)** or **Program Counter (PC)**. This pointer's sole job is to hold the memory address of the next instruction to execute.
+2.  **Fetch from RAM:** The CU retrieves the binary instruction from the memory address indicated by the IP.
+3.  **Increment the Pointer:** Immediately after the fetch, the IP's value is increased to point to the next instruction's address, ensuring the program will proceed sequentially.
+4.  **Decode:** The CU decodes the fetched instruction, understanding what action needs to be performed and what data is involved.
+5.  **Execute:** The CU sends command signals to the **ALU** and **Registers**. The ALU performs the actual calculation or logical comparison.
+6.  **Store:** The result of the execution is saved, typically back into a register for quick reuse.
+
+A single instruction can take multiple clock cycles to complete. The efficiency of a CPU is therefore not just about clock speed (GHz), but also about how many **Instructions Per Clock (IPC)** it can achieve.
+
+relevant links:
+
+- [How a CPU Works - Youtube](https://www.youtube.com/watch?v=cNN_tTXABUA)
+
+- [Visual Transistor-level Simulation of the 6502 CPU](http://www.visual6502.org/)
+
+- [Putting the “You” in CPU](https://cpu.land/the-basics)

@@ -1,0 +1,153 @@
+---
+title: How a GPU works
+---
+
+How many calculations do graphics cards perform:
+
+* **Mario 64 (1996):** \~**100 million** calculations/s.
+* **Minecraft (2011):** \~**100 billion** calculations/s.
+* **Cyberpunk 2077:** \~**36 trillion** calculations/s.
+
+**Intuition:** To match **36T calc/s**, imagine **\~4,400 Earths** where every person completes **1 calculation each second**.
+
+## GPU vs CPU
+* **GPU:** “**>10,000 cores**,” optimized for **massively parallel**, **simple** arithmetic; **cannot** run OS or directly interface with input devices or networks.
+* **CPU:** “**\~24 cores**,” higher per-core speed; **flexible** instruction support; runs OS and diverse I/O.
+* **Analogy:** GPU = **cargo ship** (huge throughput, slower per unit). CPU = **jumbo jet** (lower throughput, faster per unit, flexible).
+
+## GPU Hierarchy (NVIDIA GA102)
+
+| Level | Component | Count per Parent Component | Total Count (on GPU) | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Chip** | **Full GA102 GPU** | N/A | **1** | Contains 28.3 billion transistors. |
+| **2. Cluster** | **Graphics Processing Cluster (GPC)** | **7** GPCs per GPU | **7** | The highest-level logical block. |
+| **3. Processor** | **Streaming Multiprocessor (SM)** | **12** SMs per GPC | **84** | The main processing engine of the GPU. |
+| **4. Scheduler**| **Warp Scheduler / Processing Block** | **4** Schedulers per SM | **336** | Manages and dispatches warps (groups of 32 threads). |
+| **5. Core** | **CUDA Core** | **32** CUDA Cores per Scheduler | **10,752** | Executes floating-point and integer math. |
+| | **Tensor Core** | **1** Tensor Core per Scheduler | **336** | Accelerates AI matrix calculations. |
+| | **Ray Tracing (RT) Core** | **1** RT Core per **SM** | **84** | Accelerates ray-triangle intersection tests. |
+
+## One Chip, Multiple Products (Binning)
+During the manufacturing process, sometimes patterning errors, dust particles, or other manufacturing issues cause damage and create defective areas of the circuit. Instead of throwing out the entire chip because of a small defect, engineers find the defective region and permanently isolate and deactivate the nearby circuitry. By having a GPU with a highly repetitive design, a small defect in one core only damages that particular streaming multiprocessor circuit and doesn’t affect the other areas of the chip. As a result, these chips are tested and categorized, or binned, according to the number of defects.
+
+| Model | CUDA Cores | Active SMs | SMs Disabled | Boost Clock (MHz) | Memory | Release Date |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **RTX 3080** | 8,704 | 68 | 16 | 1710 | 10 GB | September 17, 2020 |
+| **RTX 3080 Ti** | 10,240 | 80 | 4 | 1665 | 12 GB | June 3, 2021 |
+| **RTX 3090** | 10,496 | 82 | 2 | 1695 | 24 GB | September 24, 2020 |
+| **RTX 3090 Ti** | 10,752 | 84 | 0 | 1860 | 24 GB | March 29, 2022 |
+
+- **Same GA102** used across **RTX 3080, 3080 Ti, 3090, 3090 Ti**.
+- **Yield/defect handling:** isolate defective regions; disable affected SMs; **bin** by working units.
+- **Also differ by:** **max clock**, **VRAM quantity/generation**.
+
+## Inside a CUDA Core (FP32 ALU)
+
+* A **CUDA core** = 1 FP32 ALU capable of one **FMA (A×B + C)** per clock (2 FLOPs).
+* Each **SM** in GA102 (Ampere) has
+  * **128 FP32 cores**.
+  * **2 FP64 ALUs** (double-precision), far fewer than FP32 — \~1/64 FP32 throughput.
+  * **INT32 ALUs** — in Ampere, half of FP32 cores are *hybrid FP32/INT32* units, which can execute either FP32 or INT32 per cycle.
+  * **4 Tensor Cores** (3rd gen) for matrix multiply-accumulate at lower precisions (FP16, BF16, TF32, INT8, INT4).
+  * **1 RT Core** for ray tracing.
+  * Special Function Units (SFUs), Load/Store units, warp schedulers.
+
+* **Most common method for theoretical FP32 peak:**
+
+  $$
+  \text{Peak FLOPS} = (\text{\#FP32 cores}) \times (\text{clock freq}) \times 2
+  $$
+   For RTX 3090:
+  $10{,}496 \times 1.70\,\text{GHz} \times 2 \approx 35.7$ TFLOPS FP32.
+
+* Actual achieved FLOPS depend heavily on instruction mix, memory bandwidth, and pipeline utilization — real workloads often achieve a fraction of the peak.
+
+## Graphic card components
+**On-die (GA102)**
+
+* **Memory controllers:** 12 × 32-bit GDDR6X controllers (384-bit total), positioned around die edges for shortest routing.
+* **NVLink controllers:** Present only on RTX 3090 and pro SKUs, absent on some consumer GA102 cards.
+* **PCIe interface:** PCIe 4.0 controller and PHY integrated on die.
+* **L2 cache:** 6 MB unified SRAM, distributed near memory controllers.
+* **GigaThread Engine:** Global scheduler managing all GPCs (Graphics Processing Clusters) and SMs.
+
+ **On the graphics card PCB**
+
+* **Display outputs:** Typically 3× DisplayPort 1.4a + 1× HDMI 2.1 (FE layout; AIB may vary).
+* **Power input:** 12-pin NVIDIA connector (FE) or 2–3× 8-pin PCIe connectors; delivers +12 V.
+* **PCIe edge connector:** ×16, Gen 4.0; provides power (max 75 W) and data lanes.
+* **Voltage Regulator Module (VRM):** Steps 12 V down to \~0.7–1.1 V for GPU core, \~1.35 V for GDDR6X; capable of supplying hundreds of watts (300–400 A).
+
+## Graphics Memory (VRAM)
+
+* The graphics card has **24 gigabytes of GDDR6X SDRAM** (graphics memory).
+* The GPU contains a very small **6-megabyte Level 2 cache** for immediate data access.
+* During loading screens, 3D models are moved from the **solid-state drive (SSD)** into the graphics memory.
+
+* To render a game, data is continuously transferred between the graphics memory and the GPU's cache.
+* The graphics memory has a **384-bit bus width**, which is the amount of data it can transfer simultaneously.
+* This results in a total bandwidth of approximately **1.15 terabytes per second (TB/s)**.
+* For comparison, the CPU's standard memory (DRAM) has a much smaller **64-bit bus width** and a bandwidth of only **~64 gigabytes per second (GB/s)**.
+
+
+**Signaling/encoding:**
+
+| Step | Calculation | Result | Notes |
+|------|-------------|--------|-------|
+| CK (Base) | Given | 1219 MHz | Command clock. |
+| WCK (High-Speed Mode) | 4 × CK | 4876 MHz | QDR mode ratio for peak performance. |
+| Symbol Rate | 2 × WCK (DDR) | 9752 Msymbols/s | Transfers on both clock edges; equivalent to 8 × CK. |
+| Effective Data Rate (with PAM-4) | Symbol Rate × 2 | 19.5 Gbps | GDDR6X-specific; bits per symbol doubles bandwidth. |
+| Bus Width | Given | 384 bits | Number of data pins in the memory interface. |
+| Total Throughput | Effective Data Rate × Bus Width | 7488 Gbits/s | Aggregate bit rate across all pins (19.5 Gbps/pin × 384 pins). |
+| Memory Bandwidth | Total Throughput / 8 | 936 GB/s | Converted from bits to bytes (divide by 8 bits/byte) for standard bandwidth metric. |
+
+  * **GDDR6X:** **PAM-4** (2 bits per symbol via 4 voltage levels).
+  * **GDDR7:** **PAM-3** (ternary digits, voltages **−1/0/+1**).
+
+    * Example from talk: **3 binary bits → 2 ternary digits**; combined with an **11-bit → 7 ternary-digit** scheme → **send 276 binary bits using 176 ternary digits**.
+  * **Motivation for PAM-3:** reduce **encoder complexity**, improve **SNR**, improve **power efficiency**.
+
+**High-Bandwidth Memory (HBM) for AI**
+
+* **Structure:** stacked DRAM with **TSVs** (through-silicon vias) → “memory cube” around AI chips.
+* **HBM3E capacities:** **24–36 GB per cube**; **up to \~192 GB** around one AI chip.
+* **Claim:** **\~30% less power** than “competitive products”.
+* **System context:** AI accelerator systems **\$25–40k**; often **backordered**.
+
+## “Embarrassingly Parallel”
+
+* **Definition:** problems that need **little/no effort** to split into parallel tasks.
+* **GPU fit:** **SIMD/SIMT** executing the **same instructions** over **many data elements**.
+* **Examples:** **video game rendering**, **Bitcoin mining**, **neural networks/AI**.
+
+**Vertex Translation (Model → World)**
+
+* **Object example:** **cowboy hat** with **\~28k triangles**, **\~14k vertices (x,y,z)**; origin at **(0,0,0)** in **model space**.
+* **World assembly:** place **hundreds of objects** into **world space**; translate each vertex by object’s world origin (and similarly handle rotation/scale in additional steps).
+* **Scene numbers (from talk):** **5,629 objects**, **8.3 million vertices** → **\~25 million additions** for translation step.
+* **Key idea:** each vertex transform is **independent** → perfect for **massive parallelism**.
+
+## Mapping Computation to Hardware (SIMD → SIMT)
+
+* **Thread:** executes one instruction on one data element (conceptually maps to a CUDA core).
+* **Warp:** **32 threads** executing the **same instruction sequence**.
+* **Thread Block:** a group of warps handled by an **SM**; can use **shared L1 cache (128 KB per SM, as stated)** for data sharing.
+* **Grid:** many blocks across the **entire GPU**.
+* **Global scheduler:** **Gigathread Engine** maps blocks to SMs.
+* **SIMT vs SIMD (evolution):**
+
+  * Older GPUs: **SIMD lockstep** within warps.
+  * Newer GPUs: **SIMT** — same instruction stream, but **threads can progress at different rates** (each has its **own program counter**).
+* **Warp divergence:** data-dependent branches serialize paths; **reconvergence** at synchronization barriers.
+
+## Tensor Cores — Matrix Engines
+
+* **Operation form:** **D = A×B + C** (matrix multiply-accumulate) with all three inputs “ready,” executing **concurrently** across tiles.
+* **Use cases:** **neural networks/AI**, **geometric transformations**.
+* **Note:** Ray Tracing Cores covered in a separate video.
+
+links:
+
+  - [How do Graphics Cards Work? Exploring GPU Architecture](https://www.youtube.com/watch?v=h9Z4oGN89MU)
+  - [How GPU Computing Works | GTC 2021](https://www.youtube.com/watch?v=3l10o0DYJXg)
